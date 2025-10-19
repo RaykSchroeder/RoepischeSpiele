@@ -15,7 +15,7 @@ export default function ConsentDialog({ onConfirm }) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md text-center shadow-lg">
             <h2 className="text-lg font-semibold mb-4">
               Datenschutzhinweis
@@ -50,4 +50,3 @@ export default function ConsentDialog({ onConfirm }) {
     </>
   );
 }
-
