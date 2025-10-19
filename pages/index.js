@@ -7,16 +7,25 @@ export default function Home() {
     address: "",
     phone: "",
     email: "",
+    how_found: "",
+    contact_person: "",
+    how_found_other: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
+    let how_found_final =
+      form.how_found === "Sonstiges" ? form.how_found_other : form.how_found;
+
     setLoading(true);
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        how_found: how_found_final,
+      }),
     });
     setLoading(false);
     if (res.ok) setSuccess(true);
@@ -38,7 +47,9 @@ export default function Home() {
         className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4"
         onSubmit={(e) => e.preventDefault()}
       >
-        <h1 className="text-2xl font-bold text-center">Röpische Spiele Anmeldung</h1>
+        <h1 className="text-2xl font-bold text-center mb-2">
+          Röpische Spiele Anmeldung
+        </h1>
 
         <input
           type="text"
@@ -69,11 +80,11 @@ export default function Home() {
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
 
-        <ConsentDialog onConfirm={handleSubmit} />
-
-        {loading && <p className="text-sm text-gray-500 text-center">Senden …</p>}
-      </form>
-    </div>
-  );
-}
-
+        {/* Wie aufmerksam geworden */}
+        <div>
+          <label className="block text-sm mb-1 text-gray-700">
+            Wie bist du auf die Röpischen Spiele aufmerksam geworden?
+          </label>
+          <select
+            className="border w-full p-2 rounded"
+            value={form.how
