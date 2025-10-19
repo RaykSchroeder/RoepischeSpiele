@@ -87,4 +87,41 @@ export default function Home() {
           </label>
           <select
             className="border w-full p-2 rounded"
-            value={form.how
+            value={form.how_found}
+            onChange={(e) => setForm({ ...form, how_found: e.target.value })}
+          >
+            <option value="">Bitte auswählen</option>
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>Erzählung / Freunde</option>
+            <option>Plakat / Flyer</option>
+            <option>Ortsverein / Feuerwehr</option>
+            <option>Sonstiges</option>
+          </select>
+
+          {form.how_found === "Sonstiges" && (
+            <input
+              type="text"
+              placeholder="Bitte angeben..."
+              className="border w-full p-2 rounded mt-2"
+              value={form.how_found_other}
+              onChange={(e) => setForm({ ...form, how_found_other: e.target.value })}
+            />
+          )}
+        </div>
+
+        <input
+          type="text"
+          placeholder="Über wen hast du eine Verbindung zum Orga-Team?"
+          className="border w-full p-2 rounded"
+          value={form.contact_person}
+          onChange={(e) => setForm({ ...form, contact_person: e.target.value })}
+        />
+
+        <ConsentDialog onConfirm={handleSubmit} />
+
+        {loading && <p className="text-sm text-gray-500 text-center">Senden …</p>}
+      </form>
+    </div>
+  );
+}
