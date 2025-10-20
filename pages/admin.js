@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+// Supabase-Client mit Service-Key (nur Server-seitig sicher!)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE
@@ -8,8 +9,13 @@ const supabase = createClient(
 
 export default function AdminPage() {
   const [registrations, setRegistrations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [inputPass, setInputPass] = useState("");
+
+  // Passwort aus .env lesen (wird nur beim Build eingebunden)
+  const adminPass = process.env.ADMIN_PASS;
 
   async function loadRegistrations() {
     setLoading(true);
@@ -43,9 +49,61 @@ export default function AdminPage() {
     link.click();
   }
 
-  useEffect(() => {
-    loadRegistrations();
-  }, []);
+  // Admin-Passwort prüfen
+  function handleLogin(e) {
+    e.preventDefault();
+    if (inputPass === adminPass) {
+      setAuthenticated(true);
+      loadRegistrations();
+    } else {
+      alert("❌ Falsches Passwort!");
+    }
+  }
+
+  // --- UI ---
+  if (!authenticated) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          fontFamily: "sans-serif",
+        }}
+      >
+        <h2>🔒 Admin-Login</h2>
+        <form onSubmit={handleLogin} style={{ display: "flex", gap: "8px" }}>
+          <input
+            type="password"
+            placeholder="Admin-Passwort"
+            value={inputPass}
+            onChange={(e) => setInputPass(e.target.value)}
+            style={{
+              padding: "8px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              width: "200px",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              background: "#2563eb",
+              color: "white",
+              padding: "8px 16px",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
