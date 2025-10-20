@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function AdminPage() {
   const [pass, setPass] = useState("");
@@ -51,6 +51,7 @@ export default function AdminPage() {
       "E-Mail",
       "Wie gefunden",
       "Kontaktperson",
+      "Erstellt am",
     ];
     const rows = registrations.map((r) => [
       r.name,
@@ -59,14 +60,14 @@ export default function AdminPage() {
       r.email,
       r.how_found,
       r.contact_person,
+      r.created_at,
     ]);
-    const csv =
-      [headers, ...rows].map((row) => row.join(";")).join("\n");
+    const csv = [headers, ...rows].map((row) => row.join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "roepische_spiele_registrierungen.csv";
+    a.download = "registrierungen.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
