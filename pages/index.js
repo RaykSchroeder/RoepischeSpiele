@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Image from "next/image";
-import ConsentDialog from "../components/ConsentDialog";
 
 export default function Home() {
   const [form, setForm] = useState({
@@ -10,186 +8,146 @@ export default function Home() {
     email: "",
     how_found: "",
     contact_person: "",
-    how_found_other: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
 
-  // === Daten absenden ===
-  const handleSubmit = async () => {
-    const how_found_final =
-      form.how_found === "Sonstiges ✏️" ? form.how_found_other : form.how_found;
+  const [status, setStatus] = useState("");
 
-    if (!form.name.trim() || !form.email.trim()) {
-      alert("Bitte Name und E-Mail ausfüllen!");
-      return;
-    }
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setStatus("sending");
 
-    setLoading(true);
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, how_found: how_found_final }),
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    if (res.ok) {
+      setStatus("success");
+      setForm({
+        name: "",
+        address: "",
+        phone: "",
+        email: "",
+        how_found: "",
+        contact_person: "",
       });
-      const data = await res.json();
-      if (res.ok) {
-        console.log("✅ Registrierung erfolgreich:", data);
-        setSuccess(true);
-      } else {
-        alert("Fehler: " + data.error);
-        console.error("❌ Fehler:", data);
-      }
-    } catch (err) {
-      alert("Serverfehler: " + err.message);
-      console.error("💥 Fehler beim Senden:", err);
-    } finally {
-      setLoading(false);
-      setShowDialog(false);
+    } else {
+      setStatus("error");
     }
-  };
+  }
 
-  if (success)
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 text-white text-center p-6">
-        <h1 className="text-4xl font-extrabold mb-4 animate-bounce">
-          🎉 Anmeldung erfolgreich!
-        </h1>
-        <p className="text-lg mb-8">
-          Danke für deine Anmeldung bei den <strong>Röpischen Spielen</strong>! 💪🔥
-        </p>
-        <button
-          onClick={() => setSuccess(false)}
-          className="bg-white text-orange-600 font-semibold px-6 py-2 rounded-full shadow-lg hover:bg-orange-100 transition"
-        >
-          🔙 Zurück zur Anmeldung
-        </button>
-      </div>
-    );
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_60%)] animate-pulse" />
-
-      <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg relative z-10 text-gray-800">
-        {/* Logo + Titel */}
-        <div className="text-center mb-6">
-          <Image
-            src="/picture/logo.png"
-            alt="Röpische Spiele Logo"
-            width={100}
-            height={100}
-            className="mx-auto rounded-full shadow-md border border-gray-200"
-          />
-          <h1 className="text-3xl font-extrabold mt-4 text-indigo-700">
-            🏆 Röpische Spiele 2025
-          </h1>
-          <p className="text-gray-600 italic">
-            Wissen 💡 • Kreativität 🎨 • Geschick 🎯 • Schnelligkeit ⚡
-          </p>
-        </div>
-
-        {/* Formular */}
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setShowDialog(true);
-          }}
-        >
-          <input
-            type="text"
-            placeholder="👤 Dein Name"
-            className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="🏠 Deine Adresse"
-            className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <input
-            type="text"
-            placeholder="📞 Telefonnummer"
-            className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          />
-          <input
-            type="email"
-            placeholder="📧 E-Mail-Adresse"
-            className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-
-          {/* Wie aufmerksam geworden */}
-          <div>
-            <label className="block text-sm font-semibold mb-1 text-gray-700">
-              🌟 Wie bist du auf die Röpischen Spiele aufmerksam geworden?
-            </label>
-            <select
-              className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-              value={form.how_found}
-              onChange={(e) => setForm({ ...form, how_found: e.target.value })}
-            >
-              <option value="">Bitte auswählen</option>
-              <option>Instagram 📱</option>
-              <option>Facebook 👍</option>
-              <option>Erzählung / Freunde 🗣️</option>
-              <option>Plakat / Flyer 📜</option>
-              <option>Ortsverein / Feuerwehr 🚒</option>
-              <option>Sonstiges ✏️</option>
-            </select>
-
-            {form.how_found === "Sonstiges ✏️" && (
-              <input
-                type="text"
-                placeholder="Bitte angeben..."
-                className="border w-full p-3 rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                value={form.how_found_other}
-                onChange={(e) =>
-                  setForm({ ...form, how_found_other: e.target.value })
-                }
-              />
-            )}
-          </div>
-
-          <input
-            type="text"
-            placeholder="🧑‍🤝‍🧑 Über wen hast du eine Verbindung zum Orga-Team?"
-            className="border w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-            value={form.contact_person}
-            onChange={(e) =>
-              setForm({ ...form, contact_person: e.target.value })
-            }
-          />
-
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:opacity-90 transition"
-          >
-            Jetzt anmelden 🚀
-          </button>
-
-          {loading && (
-            <p className="text-sm text-center text-gray-600 animate-pulse">
-              ⏳ Deine Anmeldung wird übermittelt …
-            </p>
-          )}
-        </form>
-      </div>
-
-      {showDialog && (
-        <ConsentDialog
-          onConfirm={handleSubmit}
-          onCancel={() => setShowDialog(false)}
+    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-white to-yellow-50 flex flex-col items-center justify-center px-4">
+      {/* Header */}
+      <header className="text-center mb-10">
+        <img
+          src="/picture/logo.png"
+          alt="Röpische Spiele Logo"
+          className="w-24 h-24 mx-auto mb-4 drop-shadow-lg"
         />
-      )}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-yellow-700">
+          🏆 Röpische Spiele 2025
+        </h1>
+        <p className="text-lg mt-3 text-gray-700">
+          Wissen 💡 • Kreativität 🎨 • Geschick 🎯 • Schnelligkeit ⚡
+        </p>
+      </header>
+
+      {/* Formular */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 w-full max-w-2xl flex flex-col gap-4 border border-yellow-200"
+      >
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="👤 Dein Name"
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        />
+        <input
+          name="address"
+          value={form.address}
+          onChange={handleChange}
+          placeholder="🏠 Deine Adresse"
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        />
+        <input
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+          placeholder="📞 Telefonnummer"
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        />
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="📧 E-Mail-Adresse"
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        />
+
+        <label className="font-medium text-gray-700 mt-2">
+          🌟 Wie bist du auf die Röpischen Spiele aufmerksam geworden?
+        </label>
+        <select
+          name="how_found"
+          value={form.how_found}
+          onChange={handleChange}
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        >
+          <option value="">Bitte auswählen</option>
+          <option value="Facebook 👍">Facebook 👍</option>
+          <option value="Instagram 📸">Instagram 📸</option>
+          <option value="Erzählung / Freunde 🗣️">Erzählung / Freunde 🗣️</option>
+          <option value="Flyer / Plakat 🪧">Flyer / Plakat 🪧</option>
+          <option value="Sonstiges ✨">Sonstiges ✨</option>
+        </select>
+
+        <input
+          name="contact_person"
+          value={form.contact_person}
+          onChange={handleChange}
+          placeholder="👥 Über wen hast du eine Verbindung zum Orga-Team?"
+          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
+        />
+
+        <button
+          type="submit"
+          disabled={status === "sending"}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 mt-3"
+        >
+          🚀 Jetzt anmelden
+        </button>
+
+        {status === "success" && (
+          <p className="text-green-600 font-semibold text-center mt-2">
+            ✅ Anmeldung erfolgreich! Danke fürs Mitmachen!
+          </p>
+        )}
+        {status === "error" && (
+          <p className="text-red-600 font-semibold text-center mt-2">
+            ❌ Fehler beim Absenden. Bitte versuche es später erneut.
+          </p>
+        )}
+      </form>
+
+      {/* Footer */}
+      <footer className="text-gray-500 text-sm mt-10">
+        <a href="/datenschutz" className="underline hover:text-yellow-700">
+          Datenschutz
+        </a>{" "}
+        •{" "}
+        <a href="/agb" className="underline hover:text-yellow-700">
+          AGBs
+        </a>{" "}
+        • © 2025 Röpische Spiele
+      </footer>
     </div>
   );
 }
