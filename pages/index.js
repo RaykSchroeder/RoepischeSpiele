@@ -49,7 +49,7 @@ export default function Home() {
             <img
               src="/pictures/roepischespiele.png"
               alt="Röpische Spiele Logo"
-              className="w-12 h-12 rounded-md shadow-md bg-white/20"
+              className="w-24 h-24 mx-auto mb-4 drop-shadow-lg rounded-xl"
             />
             <h1 className="text-xl md:text-2xl font-bold">
               🏆 Röpische Spiele 2025
