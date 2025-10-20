@@ -9,7 +9,6 @@ export default function Home() {
     how_found: "",
     contact_person: "",
   });
-
   const [status, setStatus] = useState("");
 
   async function handleSubmit(e) {
@@ -42,111 +41,134 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-white to-yellow-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       {/* Header */}
-      <header className="text-center mb-10">
-        <img
-          src="/picture/logo.png"
-          alt="Röpische Spiele Logo"
-          className="w-24 h-24 mx-auto mb-4 drop-shadow-lg"
-        />
-        <h1 className="text-4xl md:text-5xl font-extrabold text-yellow-700">
-          🏆 Röpische Spiele 2025
-        </h1>
-        <p className="text-lg mt-3 text-gray-700">
-          Wissen 💡 • Kreativität 🎨 • Geschick 🎯 • Schnelligkeit ⚡
-        </p>
+      <header className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-4 shadow-md">
+        <div className="max-w-4xl mx-auto flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <img
+              src="/picture/logo.png"
+              alt="Röpische Spiele Logo"
+              className="w-12 h-12 rounded-md shadow-md bg-white/20"
+            />
+            <h1 className="text-xl md:text-2xl font-bold">
+              🏆 Röpische Spiele 2025
+            </h1>
+          </div>
+          <nav className="hidden md:flex gap-6 text-sm font-medium">
+            <a href="/datenschutz" className="hover:underline">
+              Datenschutz
+            </a>
+            <a href="/agb" className="hover:underline">
+              AGBs
+            </a>
+          </nav>
+        </div>
       </header>
 
-      {/* Formular */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-6 w-full max-w-2xl flex flex-col gap-4 border border-yellow-200"
-      >
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="👤 Dein Name"
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        />
-        <input
-          name="address"
-          value={form.address}
-          onChange={handleChange}
-          placeholder="🏠 Deine Adresse"
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        />
-        <input
-          name="phone"
-          value={form.phone}
-          onChange={handleChange}
-          placeholder="📞 Telefonnummer"
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        />
-        <input
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="📧 E-Mail-Adresse"
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        />
-
-        <label className="font-medium text-gray-700 mt-2">
-          🌟 Wie bist du auf die Röpischen Spiele aufmerksam geworden?
-        </label>
-        <select
-          name="how_found"
-          value={form.how_found}
-          onChange={handleChange}
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        >
-          <option value="">Bitte auswählen</option>
-          <option value="Facebook 👍">Facebook 👍</option>
-          <option value="Instagram 📸">Instagram 📸</option>
-          <option value="Erzählung / Freunde 🗣️">Erzählung / Freunde 🗣️</option>
-          <option value="Flyer / Plakat 🪧">Flyer / Plakat 🪧</option>
-          <option value="Sonstiges ✨">Sonstiges ✨</option>
-        </select>
-
-        <input
-          name="contact_person"
-          value={form.contact_person}
-          onChange={handleChange}
-          placeholder="👥 Über wen hast du eine Verbindung zum Orga-Team?"
-          className="p-3 rounded-lg border border-gray-300 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 outline-none transition"
-        />
-
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:scale-105 mt-3"
-        >
-          🚀 Jetzt anmelden
-        </button>
-
-        {status === "success" && (
-          <p className="text-green-600 font-semibold text-center mt-2">
-            ✅ Anmeldung erfolgreich! Danke fürs Mitmachen!
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-3">
+            Melde dich jetzt an! 🚀
+          </h2>
+          <p className="text-center text-gray-600 mb-6">
+            Wissen 💡 • Kreativität 🎨 • Geschick 🎯 • Schnelligkeit ⚡
           </p>
-        )}
-        {status === "error" && (
-          <p className="text-red-600 font-semibold text-center mt-2">
-            ❌ Fehler beim Absenden. Bitte versuche es später erneut.
-          </p>
-        )}
-      </form>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="👤 Dein Name"
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              />
+              <input
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                placeholder="🏠 Deine Adresse"
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              />
+              <input
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="📞 Telefonnummer"
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              />
+              <input
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="📧 E-Mail-Adresse"
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="font-medium text-gray-700">
+                🌟 Wie bist du auf die Röpischen Spiele aufmerksam geworden?
+              </label>
+              <select
+                name="how_found"
+                value={form.how_found}
+                onChange={handleChange}
+                className="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+              >
+                <option value="">Bitte auswählen</option>
+                <option value="Facebook 👍">Facebook 👍</option>
+                <option value="Instagram 📸">Instagram 📸</option>
+                <option value="Erzählung / Freunde 🗣️">
+                  Erzählung / Freunde 🗣️
+                </option>
+                <option value="Flyer / Plakat 🪧">Flyer / Plakat 🪧</option>
+                <option value="Sonstiges ✨">Sonstiges ✨</option>
+              </select>
+            </div>
+
+            <input
+              name="contact_person"
+              value={form.contact_person}
+              onChange={handleChange}
+              placeholder="👥 Über wen hast du eine Verbindung zum Orga-Team?"
+              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none w-full"
+            />
+
+            <button
+              type="submit"
+              disabled={status === "sending"}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg w-full transition transform hover:scale-105"
+            >
+              Jetzt anmelden 🔥
+            </button>
+
+            {status === "success" && (
+              <p className="text-green-600 font-semibold text-center mt-2">
+                ✅ Anmeldung erfolgreich! Wir sehen uns bei den Röpischen Spielen!
+              </p>
+            )}
+            {status === "error" && (
+              <p className="text-red-600 font-semibold text-center mt-2">
+                ❌ Fehler beim Absenden. Bitte versuche es erneut.
+              </p>
+            )}
+          </form>
+        </div>
+      </main>
 
       {/* Footer */}
-      <footer className="text-gray-500 text-sm mt-10">
-        <a href="/datenschutz" className="underline hover:text-yellow-700">
+      <footer className="bg-gray-100 py-4 text-center text-sm text-gray-600">
+        © 2025 Röpische Spiele •{" "}
+        <a href="/datenschutz" className="underline hover:text-orange-600">
           Datenschutz
         </a>{" "}
         •{" "}
-        <a href="/agb" className="underline hover:text-yellow-700">
+        <a href="/agb" className="underline hover:text-orange-600">
           AGBs
-        </a>{" "}
-        • © 2025 Röpische Spiele
+        </a>
       </footer>
     </div>
   );
