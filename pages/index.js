@@ -47,7 +47,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <img
-              src="/picture/logo.png"
+              src="/pictures/roepischespiele.png"
               alt="Röpische Spiele Logo"
               className="w-12 h-12 rounded-md shadow-md bg-white/20"
             />
