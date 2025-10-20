@@ -1,3 +1,4 @@
+//pages/api/admin-registrations.js
 import { createClient } from "@supabase/supabase-js";
 
 // === Supabase-Verbindung ===
