@@ -1,6 +1,6 @@
 import { useState } from "react";
-import ConsentDialog from "../components/ConsentDialog";
 import Image from "next/image";
+import ConsentDialog from "../components/ConsentDialog";
 
 export default function Home() {
   const [form, setForm] = useState({
@@ -14,28 +14,50 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
 
+  // === Daten absenden ===
   const handleSubmit = async () => {
     const how_found_final =
-      form.how_found === "Sonstiges" ? form.how_found_other : form.how_found;
+      form.how_found === "Sonstiges ✏️" ? form.how_found_other : form.how_found;
+
+    if (!form.name.trim() || !form.email.trim()) {
+      alert("Bitte Name und E-Mail ausfüllen!");
+      return;
+    }
 
     setLoading(true);
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, how_found: how_found_final }),
-    });
-    setLoading(false);
-    if (res.ok) setSuccess(true);
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, how_found: how_found_final }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log("✅ Registrierung erfolgreich:", data);
+        setSuccess(true);
+      } else {
+        alert("Fehler: " + data.error);
+        console.error("❌ Fehler:", data);
+      }
+    } catch (err) {
+      alert("Serverfehler: " + err.message);
+      console.error("💥 Fehler beim Senden:", err);
+    } finally {
+      setLoading(false);
+      setShowDialog(false);
+    }
   };
 
   if (success)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 text-white text-center p-6">
-        <h1 className="text-4xl font-extrabold mb-4 animate-bounce">🎉 Anmeldung erfolgreich!</h1>
+        <h1 className="text-4xl font-extrabold mb-4 animate-bounce">
+          🎉 Anmeldung erfolgreich!
+        </h1>
         <p className="text-lg mb-8">
-          Danke für deine Anmeldung bei den <strong>Röpischen Spielen</strong>!  
-          Wir freuen uns auf dich! 💪🔥
+          Danke für deine Anmeldung bei den <strong>Röpischen Spielen</strong>! 💪🔥
         </p>
         <button
           onClick={() => setSuccess(false)}
@@ -48,7 +70,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Leichter animierter Farbverlauf */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.2),transparent_60%)] animate-pulse" />
 
       <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-lg relative z-10 text-gray-800">
@@ -70,7 +91,13 @@ export default function Home() {
         </div>
 
         {/* Formular */}
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setShowDialog(true);
+          }}
+        >
           <input
             type="text"
             placeholder="👤 Dein Name"
@@ -142,7 +169,12 @@ export default function Home() {
             }
           />
 
-          <ConsentDialog onConfirm={handleSubmit} />
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:opacity-90 transition"
+          >
+            Jetzt anmelden 🚀
+          </button>
 
           {loading && (
             <p className="text-sm text-center text-gray-600 animate-pulse">
@@ -151,6 +183,13 @@ export default function Home() {
           )}
         </form>
       </div>
+
+      {showDialog && (
+        <ConsentDialog
+          onConfirm={handleSubmit}
+          onCancel={() => setShowDialog(false)}
+        />
+      )}
     </div>
   );
 }
