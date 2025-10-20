@@ -8,11 +8,21 @@ export default function Home() {
     email: "",
     how_found: "",
     contact_person: "",
+    consent: false,
   });
   const [status, setStatus] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Prüfen, ob Checkbox gesetzt ist
+    if (!form.consent) {
+      alert(
+        "Bitte bestätige, dass du die AGBs und Datenschutzbestimmungen akzeptierst."
+      );
+      return;
+    }
+
     setStatus("sending");
 
     const res = await fetch("/api/register", {
@@ -30,6 +40,7 @@ export default function Home() {
         email: "",
         how_found: "",
         contact_person: "",
+        consent: false,
       });
     } else {
       setStatus("error");
@@ -37,7 +48,8 @@ export default function Home() {
   }
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   }
 
   return (
@@ -49,7 +61,7 @@ export default function Home() {
             <img
               src="/pictures/roepischespiele.png"
               alt="Röpische Spiele Logo"
-              className="w-24 h-24 mx-auto mb-4 drop-shadow-lg rounded-xl"
+              className="w-12 h-12 rounded-md shadow-md bg-white/20"
             />
             <h1 className="text-xl md:text-2xl font-bold">
               🏆 Röpische Spiele 2025
@@ -66,7 +78,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-10">
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-3">
@@ -82,8 +94,9 @@ export default function Home() {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="👤 Dein Name"
+                placeholder="👤 Dein Vor-/Nachname"
                 className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+                required
               />
               <input
                 name="address"
@@ -105,6 +118,7 @@ export default function Home() {
                 onChange={handleChange}
                 placeholder="📧 E-Mail-Adresse"
                 className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+                required
               />
             </div>
 
@@ -133,9 +147,39 @@ export default function Home() {
               name="contact_person"
               value={form.contact_person}
               onChange={handleChange}
-              placeholder="👥 Über wen hast du eine Verbindung zum Orga-Team?"
+              placeholder="👥 Verbindung zum Orga-Team (falls vorhanden)"
               className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 outline-none w-full"
             />
+
+            {/* Checkbox-Bereich */}
+            <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 p-3 rounded-lg">
+              <input
+                type="checkbox"
+                name="consent"
+                checked={form.consent}
+                onChange={handleChange}
+                className="mt-1 w-5 h-5 accent-orange-500 cursor-pointer"
+              />
+              <label className="text-gray-700 text-sm leading-snug">
+                Ich erkläre mich mit den{" "}
+                <a
+                  href="/agb"
+                  target="_blank"
+                  className="text-orange-600 font-semibold hover:underline"
+                >
+                  AGBs
+                </a>{" "}
+                und der{" "}
+                <a
+                  href="/datenschutz"
+                  target="_blank"
+                  className="text-orange-600 font-semibold hover:underline"
+                >
+                  Datenschutzerklärung
+                </a>{" "}
+                der Röpischen Spiele einverstanden.
+              </label>
+            </div>
 
             <button
               type="submit"
@@ -159,7 +203,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-100 py-4 text-center text-sm text-gray-600">
         © 2025 Röpische Spiele •{" "}
         <a href="/datenschutz" className="underline hover:text-orange-600">
