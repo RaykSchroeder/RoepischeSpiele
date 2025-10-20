@@ -65,7 +65,7 @@ export default function Home() {
               className="w-12 h-12 rounded-md shadow-md bg-white/20"
             />
             <h1 className="text-xl md:text-2xl font-bold">
-              🏆 Röpische Spiele 2025
+              🏆 Röpische Spiele 2026
             </h1>
           </div>
           <nav className="hidden md:flex gap-6 text-sm font-medium">
