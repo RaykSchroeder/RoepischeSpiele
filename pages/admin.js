@@ -1,4 +1,4 @@
-//    RoepischeSpiele/pages/admin.js
+//RoepischeSpiele/pages/admin.js
 import { useState } from "react";
 
 export default function AdminPage() {
