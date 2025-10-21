@@ -1,35 +1,52 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
+import loesungen from "../components/loesunggeoquiz";
 
-// ✅ Leaflet-Komponenten nur clientseitig laden
+// ✅ Leaflet-Map nur clientseitig laden
 const AdminMap = dynamic(() => import("../components/GeoQuizAdminMap"), {
   ssr: false,
 });
 
-// ✅ Supabase initialisieren
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+// 🌍 Hilfsfunktion – Haversine-Distanz in km
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 export default function RSGeoQuizAdmin() {
   const [entries, setEntries] = useState([]);
-  const [displayCount, setDisplayCount] = useState("alle");
-  const [status, setStatus] = useState("⏳ Lade Einträge...");
+  const [visible, setVisible] = useState([]);
+  const [status, setStatus] = useState("⏳ Lade Einträge ...");
+  const [runde, setRunde] = useState(loesungen[0]);
+  const [isReplaying, setIsReplaying] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
 
-  // 🔄 Daten abrufen
+  // 🔄 Einträge laden
   const loadData = async () => {
     const { data, error } = await supabase
       .from("geoquiz_answers")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
 
     if (error) {
       console.error(error);
-      setStatus("❌ Fehler beim Laden der Daten.");
+      setStatus("❌ Fehler beim Laden der Daten");
     } else if (!data || data.length === 0) {
-      setStatus("ℹ️ Noch keine Einträge vorhanden.");
+      setStatus("ℹ️ Noch keine Einträge vorhanden");
       setEntries([]);
     } else {
       setEntries(data);
@@ -41,37 +58,58 @@ export default function RSGeoQuizAdmin() {
     loadData();
   }, []);
 
-  const visibleEntries =
-    displayCount === "alle"
-      ? entries
-      : entries.slice(0, parseInt(displayCount));
+  // ▶️ Replay-Animation
+  const startReplay = () => {
+    if (entries.length === 0) return;
+    setIsReplaying(true);
+    setVisible([]);
+    setShowSolution(false);
+    let i = 0;
+
+    const interval = setInterval(() => {
+      i++;
+      setVisible(entries.slice(0, i));
+      if (i >= entries.length) {
+        clearInterval(interval);
+        setTimeout(() => setShowSolution(true), 1000);
+        setIsReplaying(false);
+      }
+    }, 1000);
+  };
 
   return (
     <div className="p-4 space-y-4 min-h-screen bg-gray-50">
       <h1 className="text-2xl font-bold text-center">🗺️ GeoQuiz Admin</h1>
 
-      {/* Auswahlfeld */}
-      <div className="flex justify-center gap-2 flex-wrap">
-        {["2", "4", "6", "8", "alle"].map((num) => (
-          <button
-            key={num}
-            onClick={() => setDisplayCount(num)}
-            className={`px-4 py-2 rounded border font-semibold ${
-              displayCount === num
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-800"
-            }`}
-          >
-            {num === "alle" ? "Alle" : `${num} anzeigen`}
-          </button>
-        ))}
+      {/* Runde auswählen */}
+      <div className="flex flex-wrap justify-center items-center gap-2">
+        <select
+          className="border p-2 rounded"
+          value={runde.id}
+          onChange={(e) =>
+            setRunde(loesungen.find((r) => r.id === Number(e.target.value)))
+          }
+        >
+          {loesungen.map((r) => (
+            <option key={r.id} value={r.id}>
+              Runde {r.id}: {r.name}
+            </option>
+          ))}
+        </select>
 
-        {/* 🔁 Reload-Button */}
         <button
           onClick={loadData}
           className="px-4 py-2 rounded border font-semibold bg-green-600 text-white"
         >
           🔁 Aktualisieren
+        </button>
+
+        <button
+          onClick={startReplay}
+          disabled={isReplaying}
+          className="px-4 py-2 rounded border font-semibold bg-blue-600 text-white disabled:opacity-50"
+        >
+          ▶️ Replay starten
         </button>
       </div>
 
@@ -81,12 +119,45 @@ export default function RSGeoQuizAdmin() {
 
       {/* Karte */}
       <div className="h-[500px] w-full border rounded overflow-hidden">
-        <AdminMap entries={visibleEntries} />
+        <AdminMap
+          shownEntries={isReplaying ? visible : entries}
+          showSolution={showSolution}
+          solution={runde}
+        />
       </div>
 
-      <p className="text-center text-sm text-gray-500">
-        Angezeigt: {visibleEntries.length} / {entries.length} Einträge
-      </p>
+      {/* Ergebnistabelle */}
+      {showSolution && entries.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border text-sm">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border p-2">Name</th>
+                <th className="border p-2">Abweichung (km)</th>
+                <th className="border p-2">Latitude</th>
+                <th className="border p-2">Longitude</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((e) => (
+                <tr key={e.id} className="text-center">
+                  <td className="border p-2">{e.name}</td>
+                  <td className="border p-2">
+                    {distanceKm(
+                      e.latitude,
+                      e.longitude,
+                      runde.lat,
+                      runde.lng
+                    ).toFixed(1)}
+                  </td>
+                  <td className="border p-2">{e.latitude.toFixed(4)}</td>
+                  <td className="border p-2">{e.longitude.toFixed(4)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
