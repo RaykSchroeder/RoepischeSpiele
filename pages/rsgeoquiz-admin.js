@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Leaflet dynamisch importieren (kein SSR)
+// ✅ Leaflet-Komponenten NUR clientseitig laden
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false }
@@ -19,6 +19,23 @@ const Popup = dynamic(
   () => import("react-leaflet").then((m) => m.Popup),
   { ssr: false }
 );
+const useMap = dynamic(
+  () => import("react-leaflet").then((m) => m.useMap),
+  { ssr: false }
+);
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// 🧩 Marker Icons fixen
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 // ✅ Supabase initialisieren
 const supabase = createClient(
@@ -31,29 +48,29 @@ export default function RSGeoQuizAdmin() {
   const [displayCount, setDisplayCount] = useState("alle");
   const [status, setStatus] = useState("⏳ Lade Einträge...");
 
-  // ✅ Daten laden
-  useEffect(() => {
-    async function loadData() {
-      const { data, error } = await supabase
-        .from("geoquiz_answers")
-        .select("*")
-        .order("created_at", { ascending: false });
+  // 🔄 Daten abrufen
+  const loadData = async () => {
+    const { data, error } = await supabase
+      .from("geoquiz_answers")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error(error);
-        setStatus("❌ Fehler beim Laden der Daten.");
-      } else if (data.length === 0) {
-        setStatus("ℹ️ Noch keine Einträge vorhanden.");
-      } else {
-        setEntries(data);
-        setStatus("");
-      }
+    if (error) {
+      console.error(error);
+      setStatus("❌ Fehler beim Laden der Daten.");
+    } else if (!data || data.length === 0) {
+      setStatus("ℹ️ Noch keine Einträge vorhanden.");
+      setEntries([]);
+    } else {
+      setEntries(data);
+      setStatus("");
     }
+  };
 
+  useEffect(() => {
     loadData();
   }, []);
 
-  // ✅ Anzahl der angezeigten Punkte
   const visibleEntries =
     displayCount === "alle"
       ? entries
@@ -63,7 +80,7 @@ export default function RSGeoQuizAdmin() {
     <div className="p-4 space-y-4 min-h-screen bg-gray-50">
       <h1 className="text-2xl font-bold text-center">🗺️ GeoQuiz Admin</h1>
 
-      {/* Auswahl Anzahl */}
+      {/* Auswahlfeld */}
       <div className="flex justify-center gap-2 flex-wrap">
         {["2", "4", "6", "8", "alle"].map((num) => (
           <button
@@ -78,9 +95,16 @@ export default function RSGeoQuizAdmin() {
             {num === "alle" ? "Alle" : `${num} anzeigen`}
           </button>
         ))}
+
+        {/* 🔄 Reload-Button */}
+        <button
+          onClick={loadData}
+          className="px-4 py-2 rounded border font-semibold bg-green-600 text-white"
+        >
+          🔁 Aktualisieren
+        </button>
       </div>
 
-      {/* Status */}
       {status && (
         <p className="text-center text-gray-700 font-medium">{status}</p>
       )}
@@ -88,15 +112,14 @@ export default function RSGeoQuizAdmin() {
       {/* Karte */}
       <div className="h-[500px] w-full border rounded overflow-hidden">
         <MapContainer
-          center={[51.1657, 10.4515]} // Deutschland-Mitte
+          center={[51.1657, 10.4515]} // Deutschland Mitte
           zoom={6}
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a> contributors'
+            attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-
           {visibleEntries.map((entry) => (
             <Marker
               key={entry.id}
