@@ -1,7 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// 🔧 Supabase-Verbindung
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -13,59 +12,70 @@ export default function SpielZeichnen() {
   const [status, setStatus] = useState("");
   const [player, setPlayer] = useState("");
 
-  // === Zeichnen starten ===
-  const startDrawing = (e) => {
+  // Canvas auf Gerätegröße anpassen
+  useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    ctx.beginPath();
+    ctx.lineCap = "round";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "black";
+
+    // Automatisch an Bildschirmbreite anpassen (max 600px)
+    const maxWidth = Math.min(window.innerWidth - 40, 600);
+    canvas.width = maxWidth;
+    canvas.height = Math.round(maxWidth * 1.2); // etwas höher
+  }, []);
+
+  const getPosition = (e) => {
+    const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    } else {
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+  };
+
+  const startDrawing = (e) => {
+    const { x, y } = getPosition(e);
+    const ctx = canvasRef.current.getContext("2d");
+    ctx.beginPath();
     ctx.moveTo(x, y);
     setDrawing(true);
   };
 
-  // === Zeichnen während Bewegung ===
   const draw = (e) => {
     if (!drawing) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const { x, y } = getPosition(e);
+    const ctx = canvasRef.current.getContext("2d");
     ctx.lineTo(x, y);
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 3;
-    ctx.lineCap = "round";
     ctx.stroke();
   };
 
-  // === Zeichnen stoppen ===
   const stopDrawing = () => setDrawing(false);
 
-  // === Canvas löschen ===
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // === Speichern in Supabase Storage + DB ===
   async function handleSave() {
     if (!player.trim()) return alert("Bitte gib deinen Namen ein 🙏");
 
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL("image/png");
     const blob = await (await fetch(dataUrl)).blob();
-
-    // 🔐 Eindeutiger Dateiname
     const filename = `${player.replace(/\s+/g, "_")}_${Date.now()}.png`;
 
     setStatus("⏳ Hochladen …");
 
-    // 📤 Upload in privaten Bucket
     const { error: uploadError } = await supabase.storage
-      .from("roepischespiele") // 👈 dein Bucketname
+      .from("roepischespiele")
       .upload(filename, blob, { contentType: "image/png", upsert: false });
 
     if (uploadError) {
@@ -74,7 +84,6 @@ export default function SpielZeichnen() {
       return;
     }
 
-    // 📋 Dateiname in Datenbank speichern
     const { error: dbError } = await supabase
       .from("answers")
       .insert([{ player_name: player, image_path: filename }]);
@@ -102,9 +111,7 @@ export default function SpielZeichnen() {
 
       <canvas
         ref={canvasRef}
-        width={320}
-        height={200}
-        className="border border-gray-400 bg-white rounded-lg touch-none"
+        className="border border-gray-400 bg-white rounded-lg shadow-md touch-none"
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={stopDrawing}
