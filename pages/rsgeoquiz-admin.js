@@ -2,39 +2,9 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Leaflet-Komponenten NUR clientseitig laden
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
-  { ssr: false }
-);
-const useMap = dynamic(
-  () => import("react-leaflet").then((m) => m.useMap),
-  { ssr: false }
-);
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-
-// 🧩 Marker Icons fixen
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+// ✅ Leaflet-Komponenten nur clientseitig laden
+const AdminMap = dynamic(() => import("../components/GeoQuizAdminMap"), {
+  ssr: false,
 });
 
 // ✅ Supabase initialisieren
@@ -96,7 +66,7 @@ export default function RSGeoQuizAdmin() {
           </button>
         ))}
 
-        {/* 🔄 Reload-Button */}
+        {/* 🔁 Reload-Button */}
         <button
           onClick={loadData}
           className="px-4 py-2 rounded border font-semibold bg-green-600 text-white"
@@ -111,28 +81,7 @@ export default function RSGeoQuizAdmin() {
 
       {/* Karte */}
       <div className="h-[500px] w-full border rounded overflow-hidden">
-        <MapContainer
-          center={[51.1657, 10.4515]} // Deutschland Mitte
-          zoom={6}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {visibleEntries.map((entry) => (
-            <Marker
-              key={entry.id}
-              position={[entry.latitude, entry.longitude]}
-            >
-              <Popup>
-                <strong>{entry.name}</strong>
-                <br />
-                {new Date(entry.created_at).toLocaleString("de-DE")}
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+        <AdminMap entries={visibleEntries} />
       </div>
 
       <p className="text-center text-sm text-gray-500">
