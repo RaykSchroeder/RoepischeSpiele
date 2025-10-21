@@ -1,7 +1,13 @@
 // RoepischeSpiele/components/Layout.js
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export default function Layout({ children }) {
+  const router = useRouter();
+
+  // Funktion: prüft, ob aktueller Pfad aktiv ist
+  const isActive = (path) => router.pathname === path;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       {/* Header */}
@@ -30,20 +36,59 @@ export default function Layout({ children }) {
 
       {/* Sekundäre Navigation */}
       <nav className="bg-orange-100 border-t border-orange-200 shadow-sm">
-        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-6 py-2 text-sm font-medium text-orange-800">
-          <Link href="/neuigkeiten" className="hover:text-orange-600">
+        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-4 md:gap-6 py-2 text-sm font-medium text-orange-800">
+          <Link
+            href="/"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+            }`}
+          >
+            🏠 Startseite
+          </Link>
+          <Link
+            href="/neuigkeiten"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/neuigkeiten")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
+            }`}
+          >
             🗞️ Neuigkeiten
           </Link>
-          <Link href="/faq" className="hover:text-orange-600">
+          <Link
+            href="/faq"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/faq") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+            }`}
+          >
             ❓ FAQ
           </Link>
-          <Link href="/anfahrt" className="hover:text-orange-600">
+          <Link
+            href="/anfahrt"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/anfahrt")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
+            }`}
+          >
             🚗 Anfahrt
           </Link>
-          <Link href="/infos" className="hover:text-orange-600">
+          <Link
+            href="/infos"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/infos") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+            }`}
+          >
             ℹ️ Infos zum Event
           </Link>
-          <Link href="/galerie" className="hover:text-orange-600">
+          <Link
+            href="/galerie"
+            className={`px-3 py-1 rounded-lg ${
+              isActive("/galerie")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
+            }`}
+          >
             📸 Galerie
           </Link>
         </div>
