@@ -2,12 +2,12 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Leaflet-Map wird nur im Browser geladen
+// ✅ Leaflet-Map nur im Browser
 const DynamicMap = dynamic(() => import("../components/GeoQuizMap"), {
   ssr: false,
 });
 
-// ✅ Supabase Client
+// ✅ Supabase-Client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -19,15 +19,27 @@ export default function RSGeoQuiz() {
   const [status, setStatus] = useState("");
 
   const handleSubmit = async () => {
-    if (!name) {
-      setStatus("❗ Bitte gib deinen Namen ein!");
-      return;
-    }
-    if (!position) {
-      setStatus("❗ Bitte markiere zuerst einen Punkt auf der Karte!");
-      return;
+    if (!name) return setStatus("❗ Bitte gib deinen Namen ein!");
+    if (!position)
+      return setStatus("❗ Bitte markiere zuerst einen Punkt auf der Karte!");
+
+    // 🔒 Spielstatus prüfen
+    const { data: state, error: stateErr } = await supabase
+      .from("geoquiz_state")
+      .select("is_active")
+      .eq("id", 1)
+      .single();
+
+    if (stateErr || !state) {
+      console.error(stateErr);
+      return setStatus("⚠️ Fehler beim Abrufen des Spielstatus!");
     }
 
+    if (!state.is_active) {
+      return setStatus("⛔ Runde wurde vom Admin gestoppt!");
+    }
+
+    // ✅ Nur speichern, wenn Runde aktiv ist
     const { error } = await supabase.from("geoquiz_answers").insert([
       {
         name,
@@ -59,7 +71,6 @@ export default function RSGeoQuiz() {
       />
 
       <div className="h-[400px] w-full border rounded overflow-hidden">
-        {/* Die Karte wird nur clientseitig geladen */}
         <DynamicMap position={position} setPosition={setPosition} />
       </div>
 
