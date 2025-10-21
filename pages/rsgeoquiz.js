@@ -1,7 +1,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
-import Layout from "../components/Layout";
+//import Layout from "../components/Layout";
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
