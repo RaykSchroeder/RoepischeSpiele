@@ -3,7 +3,6 @@ import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
 import loesungen from "../components/loesunggeoquiz";
 
-// ✅ Leaflet-Map nur clientseitig laden
 const AdminMap = dynamic(() => import("../components/GeoQuizAdminMap"), {
   ssr: false,
 });
@@ -13,46 +12,39 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-// 🌍 Hilfsfunktion – Haversine-Distanz in km
 function distanceKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+      Math.sin(dLon / 2) ** 2;
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
 export default function RSGeoQuizAdmin() {
   const [entries, setEntries] = useState([]);
   const [visible, setVisible] = useState([]);
-  const [status, setStatus] = useState("⏳ Lade Einträge ...");
+  const [status, setStatus] = useState("⏳ Lade Einträge …");
   const [runde, setRunde] = useState(loesungen[0]);
+  const [rundeIndex, setRundeIndex] = useState(0);
   const [isReplaying, setIsReplaying] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
-  const [isActive, setIsActive] = useState(false); // ▶️ Runde läuft?
-  const [rundeIndex, setRundeIndex] = useState(0);
 
-  // 🔄 Einträge laden
+  // 🔄 Daten laden
   const loadData = async () => {
     const { data, error } = await supabase
       .from("geoquiz_answers")
       .select("*")
       .order("created_at", { ascending: true });
-
     if (error) {
       console.error(error);
       setStatus("❌ Fehler beim Laden der Daten");
-    } else if (!data || data.length === 0) {
-      setStatus("ℹ️ Noch keine Einträge vorhanden");
-      setEntries([]);
     } else {
-      setEntries(data);
-      setStatus("");
+      setEntries(data ?? []);
+      setStatus(data?.length ? "" : "ℹ️ Noch keine Einträge");
     }
   };
 
@@ -67,40 +59,45 @@ export default function RSGeoQuizAdmin() {
     setVisible([]);
     setShowSolution(false);
     let i = 0;
-
     const interval = setInterval(() => {
       i++;
       setVisible(entries.slice(0, i));
       if (i >= entries.length) {
         clearInterval(interval);
-        setTimeout(() => setShowSolution(true), 1000);
+        setTimeout(() => setShowSolution(true), 800);
         setIsReplaying(false);
       }
     }, 1000);
   };
 
-  // ▶️ Runde starten → löscht alte Daten
+  // ▶️ Runde starten → löscht alte Punkte und aktiviert Spiel
   const startRound = async () => {
-    if (!confirm("Willst du wirklich alle bisherigen Punkte löschen und eine neue Runde starten?")) return;
+    if (!confirm("Alle bisherigen Punkte löschen und neue Runde starten?")) return;
 
-    const { error } = await supabase.from("geoquiz_answers").delete().neq("id", 0);
-    if (error) {
-      console.error(error);
-      alert("❌ Fehler beim Löschen der alten Punkte!");
-      return;
-    }
+    const { error: delErr } = await supabase.from("geoquiz_answers").delete().neq("id", 0);
+    if (delErr) return alert("❌ Fehler beim Löschen!");
+
+    const { error: stateErr } = await supabase
+      .from("geoquiz_state")
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq("id", 1);
+    if (stateErr) console.error(stateErr);
 
     setEntries([]);
     setVisible([]);
     setShowSolution(false);
-    setIsActive(true);
-    setStatus("🟢 Runde läuft – Spieler können jetzt tippen!");
+    setStatus("🟢 Runde läuft – Spieler können tippen!");
   };
 
-  // ⏹ Runde stoppen → Spieler können nicht mehr speichern
-  const stopRound = () => {
-    setIsActive(false);
-    setStatus("⛔ Runde gestoppt – keine Eingabe mehr möglich!");
+  // ⏹ Runde stoppen → Spieler sperren
+  const stopRound = async () => {
+    const { error: stateErr } = await supabase
+      .from("geoquiz_state")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("id", 1);
+    if (stateErr) console.error(stateErr);
+
+    setStatus("⛔ Runde gestoppt – Spieler gesperrt!");
   };
 
   // ⏭️ Nächste Runde
@@ -124,9 +121,7 @@ export default function RSGeoQuizAdmin() {
           className="border p-2 rounded"
           value={runde.id}
           onChange={(e) => {
-            const selected = loesungen.find(
-              (r) => r.id === Number(e.target.value)
-            );
+            const selected = loesungen.find((r) => r.id === Number(e.target.value));
             setRunde(selected);
             setRundeIndex(loesungen.indexOf(selected));
           }}
@@ -175,9 +170,7 @@ export default function RSGeoQuizAdmin() {
         </button>
       </div>
 
-      {status && (
-        <p className="text-center text-gray-700 font-medium">{status}</p>
-      )}
+      {status && <p className="text-center text-gray-700 font-medium">{status}</p>}
 
       {/* Karte */}
       <div className="h-[500px] w-full border rounded overflow-hidden">
@@ -205,12 +198,7 @@ export default function RSGeoQuizAdmin() {
                 <tr key={e.id} className="text-center">
                   <td className="border p-2">{e.name}</td>
                   <td className="border p-2">
-                    {distanceKm(
-                      e.latitude,
-                      e.longitude,
-                      runde.lat,
-                      runde.lng
-                    ).toFixed(1)}
+                    {distanceKm(e.latitude, e.longitude, runde.lat, runde.lng).toFixed(1)}
                   </td>
                   <td className="border p-2">{e.latitude.toFixed(4)}</td>
                   <td className="border p-2">{e.longitude.toFixed(4)}</td>
