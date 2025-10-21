@@ -1,4 +1,6 @@
 // RoepischeSpiele/components/Layout.js
+import Link from "next/link";
+
 export default function Layout({ children }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
@@ -16,15 +18,36 @@ export default function Layout({ children }) {
             </h1>
           </div>
           <nav className="hidden md:flex gap-6 text-sm font-medium">
-            <a href="/datenschutz" className="hover:underline">
+            <Link href="/datenschutz" className="hover:underline">
               Datenschutz
-            </a>
-            <a href="/agb" className="hover:underline">
+            </Link>
+            <Link href="/agb" className="hover:underline">
               AGBs
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
+
+      {/* Sekundäre Navigation */}
+      <nav className="bg-orange-100 border-t border-orange-200 shadow-sm">
+        <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-6 py-2 text-sm font-medium text-orange-800">
+          <Link href="/neuigkeiten" className="hover:text-orange-600">
+            🗞️ Neuigkeiten
+          </Link>
+          <Link href="/faq" className="hover:text-orange-600">
+            ❓ FAQ
+          </Link>
+          <Link href="/anfahrt" className="hover:text-orange-600">
+            🚗 Anfahrt
+          </Link>
+          <Link href="/infos" className="hover:text-orange-600">
+            ℹ️ Infos zum Event
+          </Link>
+          <Link href="/galerie" className="hover:text-orange-600">
+            📸 Galerie
+          </Link>
+        </div>
+      </nav>
 
       {/* Hauptinhalt */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-10">
@@ -34,13 +57,13 @@ export default function Layout({ children }) {
       {/* Footer */}
       <footer className="bg-gray-100 py-4 text-center text-sm text-gray-600">
         © 2025 Röpische Spiele •{" "}
-        <a href="/datenschutz" className="underline hover:text-orange-600">
+        <Link href="/datenschutz" className="underline hover:text-orange-600">
           Datenschutz
-        </a>{" "}
+        </Link>{" "}
         •{" "}
-        <a href="/agb" className="underline hover:text-orange-600">
+        <Link href="/agb" className="underline hover:text-orange-600">
           AGBs
-        </a>
+        </Link>
       </footer>
     </div>
   );
