@@ -1,8 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// 🧩 Leaflet-Marker-Icons fixen (Vercel-kompatibel)
+// 🧩 Standard Leaflet Marker Icons (Vercel-kompatibel)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -13,12 +13,12 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-// 🔴 Icon für die Lösungs-Position
-const redIcon = new L.Icon({
+// 🟢 Icon für die Lösungsposition
+const greenIcon = new L.Icon({
   iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-red.png",
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-green.png",
   iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-red.png",
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-green.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -39,8 +39,18 @@ export default function GeoQuizAdminMap({ shownEntries, showSolution, solution }
         url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png"
       />
 
+      {/* 🔵 Teilnehmer-Marker mit Name darunter */}
       {shownEntries.map((entry) => (
         <Marker key={entry.id} position={[entry.latitude, entry.longitude]}>
+          <Tooltip
+            direction="bottom"
+            offset={[0, 20]}
+            opacity={1}
+            permanent
+            className="font-semibold bg-white text-gray-800 border rounded px-1 shadow-sm"
+          >
+            {entry.name}
+          </Tooltip>
           <Popup>
             <strong>{entry.name}</strong>
             <br />
@@ -49,11 +59,21 @@ export default function GeoQuizAdminMap({ shownEntries, showSolution, solution }
         </Marker>
       ))}
 
+      {/* 🟢 Lösungsmarker */}
       {showSolution && solution && (
         <Marker
           position={[solution.lat, solution.lng]}
-          icon={redIcon}
+          icon={greenIcon}
         >
+          <Tooltip
+            direction="bottom"
+            offset={[0, 20]}
+            opacity={1}
+            permanent
+            className="font-bold text-green-700 bg-white border rounded px-1 shadow-sm"
+          >
+            ✅ {solution.name}
+          </Tooltip>
           <Popup>
             <strong>✅ Lösung: {solution.name}</strong>
             <br />
