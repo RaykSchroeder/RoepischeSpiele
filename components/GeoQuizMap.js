@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// 🧩 Leaflet Marker Icons fixen
+// 🔧 Standard-Leaflet-Icons fixen (wichtig für Vercel)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -13,10 +13,10 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-function ClickHandler({ onSelect }) {
+function ClickHandler({ setPosition }) {
   useMapEvents({
     click(e) {
-      onSelect(e.latlng);
+      setPosition(e.latlng);
     },
   });
   return null;
@@ -25,16 +25,19 @@ function ClickHandler({ onSelect }) {
 export default function GeoQuizMap({ position, setPosition }) {
   return (
     <MapContainer
-      center={[51.1657, 10.4515]} // Deutschland Mitte
-      zoom={6}
+      center={[51.1657, 10.4515]}
+      zoom={5}
       style={{ height: "100%", width: "100%" }}
     >
+      {/* 🌍 Karte ohne Städtenamen */}
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png"
       />
-      <ClickHandler onSelect={setPosition} />
-      {position && <Marker position={position}></Marker>}
+
+      <ClickHandler setPosition={setPosition} />
+
+      {position && <Marker position={position} />}
     </MapContainer>
   );
 }
