@@ -30,8 +30,8 @@ export default function GeoQuizMap({ position, setPosition }) {
       style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png"
       />
       <ClickHandler onSelect={setPosition} />
       {position && <Marker position={position}></Marker>}
