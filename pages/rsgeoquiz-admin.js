@@ -34,6 +34,8 @@ export default function RSGeoQuizAdmin() {
   const [runde, setRunde] = useState(loesungen[0]);
   const [isReplaying, setIsReplaying] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [isActive, setIsActive] = useState(false); // ▶️ Runde läuft?
+  const [rundeIndex, setRundeIndex] = useState(0);
 
   // 🔄 Einträge laden
   const loadData = async () => {
@@ -77,18 +79,57 @@ export default function RSGeoQuizAdmin() {
     }, 1000);
   };
 
+  // ▶️ Runde starten → löscht alte Daten
+  const startRound = async () => {
+    if (!confirm("Willst du wirklich alle bisherigen Punkte löschen und eine neue Runde starten?")) return;
+
+    const { error } = await supabase.from("geoquiz_answers").delete().neq("id", 0);
+    if (error) {
+      console.error(error);
+      alert("❌ Fehler beim Löschen der alten Punkte!");
+      return;
+    }
+
+    setEntries([]);
+    setVisible([]);
+    setShowSolution(false);
+    setIsActive(true);
+    setStatus("🟢 Runde läuft – Spieler können jetzt tippen!");
+  };
+
+  // ⏹ Runde stoppen → Spieler können nicht mehr speichern
+  const stopRound = () => {
+    setIsActive(false);
+    setStatus("⛔ Runde gestoppt – keine Eingabe mehr möglich!");
+  };
+
+  // ⏭️ Nächste Runde
+  const nextRound = () => {
+    const next = (rundeIndex + 1) % loesungen.length;
+    setRunde(loesungen[next]);
+    setRundeIndex(next);
+    setShowSolution(false);
+    setEntries([]);
+    setVisible([]);
+    setStatus(`➡️ Runde ${loesungen[next].id}: ${loesungen[next].name}`);
+  };
+
   return (
     <div className="p-4 space-y-4 min-h-screen bg-gray-50">
       <h1 className="text-2xl font-bold text-center">🗺️ GeoQuiz Admin</h1>
 
-      {/* Runde auswählen */}
+      {/* Steuerung */}
       <div className="flex flex-wrap justify-center items-center gap-2">
         <select
           className="border p-2 rounded"
           value={runde.id}
-          onChange={(e) =>
-            setRunde(loesungen.find((r) => r.id === Number(e.target.value)))
-          }
+          onChange={(e) => {
+            const selected = loesungen.find(
+              (r) => r.id === Number(e.target.value)
+            );
+            setRunde(selected);
+            setRundeIndex(loesungen.indexOf(selected));
+          }}
         >
           {loesungen.map((r) => (
             <option key={r.id} value={r.id}>
@@ -98,8 +139,29 @@ export default function RSGeoQuizAdmin() {
         </select>
 
         <button
-          onClick={loadData}
+          onClick={startRound}
           className="px-4 py-2 rounded border font-semibold bg-green-600 text-white"
+        >
+          ▶️ Start
+        </button>
+
+        <button
+          onClick={stopRound}
+          className="px-4 py-2 rounded border font-semibold bg-red-600 text-white"
+        >
+          ⏹ Stopp
+        </button>
+
+        <button
+          onClick={nextRound}
+          className="px-4 py-2 rounded border font-semibold bg-yellow-500 text-white"
+        >
+          ⏭️ Nächste Runde
+        </button>
+
+        <button
+          onClick={loadData}
+          className="px-4 py-2 rounded border font-semibold bg-gray-600 text-white"
         >
           🔁 Aktualisieren
         </button>
@@ -109,7 +171,7 @@ export default function RSGeoQuizAdmin() {
           disabled={isReplaying}
           className="px-4 py-2 rounded border font-semibold bg-blue-600 text-white disabled:opacity-50"
         >
-          ▶️ Replay starten
+          🎬 Replay
         </button>
       </div>
 
