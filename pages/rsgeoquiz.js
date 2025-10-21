@@ -1,8 +1,8 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
-//import Layout from "../components/Layout";
 
+// ✅ Leaflet-Komponenten nur im Browser laden (kein SSR)
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false }
@@ -20,19 +20,23 @@ const useMapEvents = dynamic(
   { ssr: false }
 );
 
-// Supabase Setup (verwende deine .env.local Variablen)
+// ✅ Supabase Client initialisieren
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+// ✅ Karte mit Klick-Event
 function ClickableMap({ onSelect }) {
-  useMapEvents({
-    click(e) {
-      onSelect(e.latlng);
-    },
-  });
-  return null;
+  const MapClick = () => {
+    useMapEvents({
+      click(e) {
+        onSelect(e.latlng);
+      },
+    });
+    return null;
+  };
+  return <MapClick />;
 }
 
 export default function RSGeoQuiz() {
@@ -42,11 +46,11 @@ export default function RSGeoQuiz() {
 
   const handleSubmit = async () => {
     if (!name) {
-      setStatus("Bitte gib deinen Namen ein!");
+      setStatus("❗ Bitte gib deinen Namen ein!");
       return;
     }
     if (!position) {
-      setStatus("Bitte markiere einen Punkt auf der Karte!");
+      setStatus("❗ Bitte markiere zuerst einen Punkt auf der Karte!");
       return;
     }
 
@@ -60,7 +64,7 @@ export default function RSGeoQuiz() {
 
     if (error) {
       console.error(error);
-      setStatus("Fehler beim Speichern 😕");
+      setStatus("❌ Fehler beim Speichern.");
     } else {
       setStatus("✅ Position erfolgreich gespeichert!");
       setName("");
@@ -69,42 +73,42 @@ export default function RSGeoQuiz() {
   };
 
   return (
-    <Layout>
-      <div className="p-4 space-y-4">
-        <h1 className="text-2xl font-bold">🌍 RS GeoQuiz</h1>
+    <div className="p-4 space-y-4 min-h-screen bg-gray-50">
+      <h1 className="text-2xl font-bold text-center">🌍 RS GeoQuiz</h1>
 
-        <input
-          type="text"
-          placeholder="Dein Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="border p-2 w-full rounded"
-        />
+      <input
+        type="text"
+        placeholder="Dein Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="border p-2 w-full rounded"
+      />
 
-        <div className="h-[400px] w-full border rounded overflow-hidden">
-          <MapContainer
-            center={[51.1657, 10.4515]}
-            zoom={6}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <ClickableMap onSelect={setPosition} />
-            {position && <Marker position={position}></Marker>}
-          </MapContainer>
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+      <div className="h-[400px] w-full border rounded overflow-hidden">
+        <MapContainer
+          center={[51.1657, 10.4515]} // Deutschland Mitte
+          zoom={6}
+          style={{ height: "100%", width: "100%" }}
         >
-          📍 Position bestätigen
-        </button>
-
-        {status && <p className="text-center text-gray-700">{status}</p>}
+          <TileLayer
+            attribution='&copy; <a href="https://osm.org/">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <ClickableMap onSelect={setPosition} />
+          {position && <Marker position={position}></Marker>}
+        </MapContainer>
       </div>
-    </Layout>
+
+      <button
+        onClick={handleSubmit}
+        className="bg-blue-600 text-white px-4 py-2 rounded w-full font-semibold"
+      >
+        📍 Position bestätigen
+      </button>
+
+      {status && (
+        <p className="text-center text-gray-700 font-medium">{status}</p>
+      )}
+    </div>
   );
 }
