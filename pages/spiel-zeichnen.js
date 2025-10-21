@@ -75,7 +75,7 @@ export default function SpielZeichnen() {
     setStatus("⏳ Hochladen …");
 
     const { error: uploadError } = await supabase.storage
-      .from("roepischespiele")
+      .from("Roepischespiele")
       .upload(filename, blob, { contentType: "image/png", upsert: false });
 
     if (uploadError) {
