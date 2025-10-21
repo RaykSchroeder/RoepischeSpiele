@@ -37,6 +37,13 @@ const loesungen = [
     lat: 53.88,
     lng: 8.73,
   },
+    {
+    id: 6,
+    name: "Heide-Park Soltau",
+    beschreibung: "Wo der Heide-Park Soltau",
+    lat: 53.02,
+    lng: 9.87,
+  },
 ];
 
 export default loesungen;
