@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,13 +17,30 @@ export default function RSGeoQuiz() {
   const [name, setName] = useState("");
   const [position, setPosition] = useState(null);
   const [status, setStatus] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [nameFixed, setNameFixed] = useState(false); // 👤 Name nach Speichern fixieren
 
+  // 🔄 Spielstatus abrufen beim Start
+  useEffect(() => {
+    checkGameState();
+  }, []);
+
+  const checkGameState = async () => {
+    const { data, error } = await supabase
+      .from("geoquiz_state")
+      .select("is_active")
+      .eq("id", 1)
+      .single();
+    if (!error && data) setIsActive(data.is_active);
+  };
+
+  // 💾 Speichern / Aktualisieren
   const handleSubmit = async () => {
     if (!name) return setStatus("❗ Bitte gib deinen Namen ein!");
     if (!position)
       return setStatus("❗ Bitte markiere zuerst einen Punkt auf der Karte!");
 
-    // 🔒 Spielstatus prüfen
+    // 🔒 Runde prüfen
     const { data: state, error: stateErr } = await supabase
       .from("geoquiz_state")
       .select("is_active")
@@ -31,30 +48,33 @@ export default function RSGeoQuiz() {
       .single();
 
     if (stateErr || !state) {
-      console.error(stateErr);
-      return setStatus("⚠️ Fehler beim Abrufen des Spielstatus!");
+      setStatus("⚠️ Fehler beim Abrufen des Spielstatus!");
+      return;
     }
 
     if (!state.is_active) {
-      return setStatus("⛔ Runde wurde vom Admin gestoppt!");
+      setStatus("⛔ Runde wurde vom Admin gestoppt!");
+      return;
     }
 
-    // ✅ Nur speichern, wenn Runde aktiv ist
-    const { error } = await supabase.from("geoquiz_answers").insert([
-      {
-        name,
-        latitude: position.lat,
-        longitude: position.lng,
-      },
-    ]);
+    // ✅ Upsert (Name eindeutig)
+    const { error } = await supabase.from("geoquiz_answers").upsert(
+      [
+        {
+          name,
+          latitude: position.lat,
+          longitude: position.lng,
+        },
+      ],
+      { onConflict: "name" }
+    );
 
     if (error) {
       console.error(error);
       setStatus("❌ Fehler beim Speichern.");
     } else {
-      setStatus("✅ Position erfolgreich gespeichert!");
-      setName("");
-      setPosition(null);
+      setStatus("✅ Position gespeichert!");
+      setNameFixed(true); // 👤 Name jetzt fixieren
     }
   };
 
@@ -67,7 +87,8 @@ export default function RSGeoQuiz() {
         placeholder="Dein Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="border p-2 w-full rounded"
+        disabled={nameFixed} // 👤 nach erstem Speichern fix
+        className="border p-2 w-full rounded disabled:bg-gray-100 disabled:text-gray-500"
       />
 
       <div className="h-[400px] w-full border rounded overflow-hidden">
@@ -76,9 +97,14 @@ export default function RSGeoQuiz() {
 
       <button
         onClick={handleSubmit}
-        className="bg-blue-600 text-white px-4 py-2 rounded w-full font-semibold"
+        disabled={!isActive}
+        className={`w-full font-semibold text-white px-4 py-2 rounded ${
+          isActive
+            ? "bg-blue-600 hover:bg-blue-700"
+            : "bg-gray-400 cursor-not-allowed"
+        }`}
       >
-        📍 Position bestätigen
+        📍 Position speichern
       </button>
 
       {status && (
