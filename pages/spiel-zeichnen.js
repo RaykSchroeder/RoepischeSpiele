@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+// 🔧 Supabase-Verbindung
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -49,21 +50,23 @@ export default function SpielZeichnen() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // === Hochladen in Supabase Storage ===
+  // === Speichern in Supabase Storage + DB ===
   async function handleSave() {
+    if (!player.trim()) return alert("Bitte gib deinen Namen ein 🙏");
+
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL("image/png");
-
-    // Base64 → Blob konvertieren
     const blob = await (await fetch(dataUrl)).blob();
-    const filename = `${Date.now()}_${Math.floor(Math.random() * 10000)}.png`;
+
+    // 🔐 Eindeutiger Dateiname
+    const filename = `${player.replace(/\s+/g, "_")}_${Date.now()}.png`;
 
     setStatus("⏳ Hochladen …");
 
-    // In privaten Bucket hochladen
+    // 📤 Upload in privaten Bucket
     const { error: uploadError } = await supabase.storage
-      .from("dein_bucket_name") // ⚠️ anpassen!
-      .upload(filename, blob, { contentType: "image/png" });
+      .from("roepischespiele") // 👈 dein Bucketname
+      .upload(filename, blob, { contentType: "image/png", upsert: false });
 
     if (uploadError) {
       console.error(uploadError);
@@ -71,10 +74,10 @@ export default function SpielZeichnen() {
       return;
     }
 
-    // Pfad in Datenbank speichern
+    // 📋 Dateiname in Datenbank speichern
     const { error: dbError } = await supabase
       .from("answers")
-      .insert([{ player_name: player || "Unbekannt", image_path: filename }]);
+      .insert([{ player_name: player, image_path: filename }]);
 
     if (dbError) {
       console.error(dbError);
@@ -91,10 +94,10 @@ export default function SpielZeichnen() {
 
       <input
         type="text"
-        placeholder="Dein Name (optional)"
+        placeholder="Dein Name"
         value={player}
         onChange={(e) => setPlayer(e.target.value)}
-        className="border p-2 rounded-lg mb-4 w-64"
+        className="border p-2 rounded-lg mb-4 w-64 text-center"
       />
 
       <canvas
