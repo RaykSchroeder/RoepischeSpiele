@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 export default function Layout({ children }) {
   const router = useRouter();
 
-  // Funktion: prüft, ob aktueller Pfad aktiv ist
+  // Prüft, ob aktueller Pfad aktiv ist
   const isActive = (path) => router.pathname === path;
 
   return (
@@ -40,10 +40,12 @@ export default function Layout({ children }) {
           <Link
             href="/"
             className={`px-3 py-1 rounded-lg ${
-              isActive("/") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+              isActive("/")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
             }`}
           >
-            🏠 Startseite
+            🏠 Startseite / Anmeldung
           </Link>
           <Link
             href="/neuigkeiten"
@@ -58,7 +60,9 @@ export default function Layout({ children }) {
           <Link
             href="/faq"
             className={`px-3 py-1 rounded-lg ${
-              isActive("/faq") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+              isActive("/faq")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
             }`}
           >
             ❓ FAQ
@@ -76,7 +80,9 @@ export default function Layout({ children }) {
           <Link
             href="/infos"
             className={`px-3 py-1 rounded-lg ${
-              isActive("/infos") ? "bg-orange-500 text-white" : "hover:text-orange-600"
+              isActive("/infos")
+                ? "bg-orange-500 text-white"
+                : "hover:text-orange-600"
             }`}
           >
             ℹ️ Infos zum Event
